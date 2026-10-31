@@ -154,7 +154,9 @@ private:
     std::uint64_t idleWrites_ = ~0ull;
     std::array<std::uint32_t, 16> idleRegs_{};
 
+#if defined(__x86_64__)
     std::unique_ptr<DspJit> jit_;
+#endif
 };
 
 }  // namespace hydra::dsp

@@ -70,19 +70,22 @@ using namespace hydra;
 // HYDRA_SAMPLE=file: samples the main thread's instruction pointer at 5 kHz of its
 // CPU time (with HYDRA_SAMPLE_ALL: of all threads, by process CPU time) and writes /proc/self/maps, "SAMPLES" and one hex address per line;
 // tools/symbolize_samples.py turns that into a per-function profile.
+#include "host_clock.h"
+#if defined(__linux__)
 #include <csignal>
 #include <ctime>
 #include <sys/syscall.h>
 #include <sys/time.h>
-#include <x86intrin.h>
 #include <ucontext.h>
 #include <unistd.h>
+#endif
 
 namespace {
 constexpr std::size_t kMaxSamples = 1 << 20;
 std::uintptr_t gSamples[kMaxSamples];
 std::atomic<std::size_t> gSampleCount{0};
 
+#if defined(__linux__)
 void recordSample(int, siginfo_t*, void* context) {
     const std::size_t i = gSampleCount.fetch_add(1, std::memory_order_relaxed);
     if (i < kMaxSamples)
@@ -130,6 +133,10 @@ void writeSamples(const char* path) {
         std::fprintf(f, "%lx\n", static_cast<unsigned long>(gSamples[i]));
     std::fclose(f);
 }
+#else
+void startSampler() {}
+void writeSamples(const char*) {}
+#endif
 }  // namespace
 
 // Writes interleaved stereo samples (24-bit range, clamped) as a 44.1 kHz 24-bit WAV.
@@ -416,7 +423,7 @@ int main(int argc, char** argv) {
         // thread's time goes (slices, JIT exits, device accesses).
         const bool hostProfile = std::getenv("HYDRA_HOST_PROFILE") != nullptr;
         const auto hostStart = std::chrono::steady_clock::now();
-        const std::uint64_t tscStart = __rdtsc(), ticksStart = machine.cpu().ticksExecuted();
+        const std::uint64_t clockStart = hydra::hostClockTicks(), ticksStart = machine.cpu().ticksExecuted();
         const std::uint64_t idleStart = machine.idleTicks(), skippedStart = machine.cpu().ticksSkipped();
         const std::uint64_t svcStart = machine.cpu().svcCount, sysStart = machine.cpu().systemInstructions;
         const std::array<std::uint64_t, 32> irqStart = machine.intc().raisedCounts();
@@ -744,7 +751,7 @@ int main(int argc, char** argv) {
         std::printf("\n");
         if (hostProfile) {
             const double wall = std::chrono::duration<double>(std::chrono::steady_clock::now() - hostStart).count();
-            const double tscPerNs = static_cast<double>(__rdtsc() - tscStart) / (wall * 1e9);
+            const double tscPerNs = static_cast<double>(hydra::hostClockTicks() - clockStart) / (wall * 1e9);
             const double emulated = static_cast<double>(machine.cpu().ticksExecuted() - ticksStart) / Machine::kCpuHz;
             const Machine::Profile& p = machine.profile();
             const auto ms = [&](double ns) { return ns / 1e6 / emulated; };  // per emulated second

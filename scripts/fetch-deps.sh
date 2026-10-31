@@ -9,9 +9,17 @@ if [ ! -d external/dynarmic ]; then
     git -C external/dynarmic remote add origin https://github.com/azahar-emu/dynarmic.git
     git -C external/dynarmic fetch -q --depth 1 origin "$DYNARMIC_COMMIT"
     git -C external/dynarmic checkout -q FETCH_HEAD
-    git -C external/dynarmic submodule update -q --init --depth 1 \
-        externals/fmt externals/mcl externals/robin-map externals/xbyak externals/zycore externals/zydis
-    git -C external/dynarmic/externals/zydis submodule update -q --init --depth 1
+fi
+
+# The dependency directory may already exist with only some submodules
+# populated (for example after an interrupted fetch). Always complete it.
+git -C external/dynarmic submodule update -q --init --depth 1 \
+    externals/fmt externals/mcl externals/oaknut externals/robin-map \
+    externals/xbyak externals/zycore externals/zydis
+git -C external/dynarmic/externals/zydis submodule update -q --init --depth 1
+
+# Keep this safe to rerun after a partial dependency setup.
+if ! git -C external/dynarmic apply --reverse --check "$PWD/patches/dynarmic-system-instructions.patch" 2>/dev/null; then
     git -C external/dynarmic apply "$PWD/patches/dynarmic-system-instructions.patch"
 fi
 

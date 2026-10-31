@@ -5,7 +5,9 @@
 #include <iterator>
 #include <string_view>
 
+#if defined(__x86_64__)
 #include "dsp_jit.h"
+#endif
 
 namespace hydra::dsp {
 
@@ -257,8 +259,10 @@ void DspCore::setJit(bool enabled) {
 
 void DspCore::invalidate(std::uint32_t pc) {
     cache_[pc & (kProgramWords - 1)].valid = false;
+#if defined(__x86_64__)
     if (jit_)
         jit_->invalidate();
+#endif
 }
 
 void DspCore::reset() {
@@ -357,8 +361,10 @@ bool DspCore::branchIdle(std::uint32_t target) {
 std::uint64_t DspCore::run(std::uint64_t budget) {
     if (budget == 0 || trapped_)
         return 0;
+#if defined(__x86_64__)
     if (jit_)
         return jit_->run(budget);
+#endif
     return interpret(budget, budget);
 }
 

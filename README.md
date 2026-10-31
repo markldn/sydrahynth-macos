@@ -1,6 +1,6 @@
 # Sydrahynth
 
-Sydrahynth is a Linux plugin that emulates ASM's Hydrasynth Desktop. It runs ASM's own
+Sydrahynth is a plugin for Linux and macOS that emulates ASM's Hydrasynth Desktop. It runs ASM's own
 Hydrasynth Desktop firmware on an emulated main board. No firmware is included:
 you supply `Hydrasynth_Desktop_Firmware_2.2.0.dat` from ASM's firmware pack.
 
@@ -11,6 +11,13 @@ https://github.com/user-attachments/assets/9b7ed8db-5732-41ab-bc41-2bdd0075680c
 
 
 ## Build
+
+On macOS, install the build tools and Boost headers first:
+
+    brew install cmake ninja boost
+
+Then fetch dependencies and build as below. Apple Silicon builds use the DSP
+interpreter; the x86-64 DSP JIT remains enabled on supported x86-64 hosts.
 
     scripts/fetch-deps.sh
     cmake -S . -B build -G Ninja

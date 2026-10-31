@@ -27,7 +27,6 @@ add_library(hydra_core STATIC
     src/cpu.cpp
     src/dsp_block.cpp
     src/dsp_core.cpp
-    src/dsp_jit.cpp
     src/effects_rack.cpp
     src/emulator.cpp
     src/fx_dsp.cpp
@@ -45,8 +44,17 @@ add_library(hydra_core STATIC
     src/tone_generator.cpp
     src/wave_rom.cpp
 )
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
+    target_sources(hydra_core PRIVATE src/dsp_jit.cpp)
+endif()
 target_include_directories(hydra_core PUBLIC src)
-target_link_libraries(hydra_core PUBLIC dynarmic merry::mcl PRIVATE xbyak::xbyak)
+target_include_directories(hydra_core SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+target_link_libraries(hydra_core PUBLIC dynarmic merry::mcl)
+# Dynarmic only creates this target for x86-64 hosts. The DSP JIT and the
+# ARM guest emulator do not need it on other architectures.
+if (TARGET xbyak::xbyak)
+    target_link_libraries(hydra_core PRIVATE xbyak::xbyak)
+endif()
 # Same Xbyak configuration as Dynarmic: its inline functions are shared (ODR).
 target_compile_definitions(hydra_core PRIVATE XBYAK_STRICT_CHECK_MEM_REG_SIZE=0)
 target_compile_options(hydra_core PRIVATE -Wall -Wextra)
