@@ -84,6 +84,8 @@ this project is not affiliated with or endorsed by ASM.
   hardware: the five displays, button LEDs, encoder rings and pad colours.
   Click buttons and pads; drag or scroll encoders, the data encoder and knobs
   (the volume knob is the plugin's output gain).
+- The standalone's "Keyboard" control shows a playable piano. Click its keys or
+  use the computer keyboard: A W S E D F T G Y H U J K O L P ;.
 
 Code: `src/emulator.*` (`hydra::Emulator`) runs a `hydra::Machine` on its own
 threads (audio ring, MIDI queue, panel input and capture, patch upload, flash

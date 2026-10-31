@@ -5,7 +5,9 @@
 
 #include "HydraProcessor.h"
 
-HydraEditor::HydraEditor(HydraProcessor& owner) : AudioProcessorEditor(owner), processor_(owner), browser_(owner), panel_(owner) {
+HydraEditor::HydraEditor(HydraProcessor& owner)
+    : AudioProcessorEditor(owner), processor_(owner), browser_(owner), panel_(owner),
+      keyboard_(owner.midiKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard) {
     title_.setText("Sydrahynth", juce::dontSendNotification);
     title_.setFont(juce::FontOptions(18.0f, juce::Font::bold));
     for (juce::Label* label : {&title_, &firmware_, &status_})
@@ -23,8 +25,14 @@ HydraEditor::HydraEditor(HydraProcessor& owner) : AudioProcessorEditor(owner), p
     togglePatches_.setTooltip("Show or hide the patch browser");
     togglePatches_.onClick = [this] { showBrowser(togglePatches_.getToggleState(), true); };
     addAndMakeVisible(togglePatches_);
+    toggleKeyboard_.setClickingTogglesState(true);
+    toggleKeyboard_.setTooltip("Show a playable piano. Click the keys or use A W S E D F T G Y H U J K O L P ; on your computer keyboard.");
+    toggleKeyboard_.onClick = [this] { showKeyboard(toggleKeyboard_.getToggleState(), true); };
+    addAndMakeVisible(toggleKeyboard_);
     addChildComponent(browser_);
     addAndMakeVisible(panel_);
+    addChildComponent(keyboard_);
+    keyboard_.setKeyPressBaseOctave(4);
     // The panel keeps its proportions; the status bar and the browser have fixed sizes.
     setConstrainer(&constrainer_);
     setResizable(true, true);
@@ -78,7 +86,30 @@ void PanelConstrainer::checkBounds(juce::Rectangle<int>& bounds, const juce::Rec
 }
 
 void HydraEditor::updateResizeLimits() {
-    constrainer_.setLayout(browser_.isVisible() ? kBrowserWidth : 0, kBarHeight, PanelView::kCanvasWidth / PanelView::kCanvasHeight, 700, 2400);
+    constrainer_.setLayout(browser_.isVisible() ? kBrowserWidth : 0, kBarHeight + (keyboard_.isVisible() ? kKeyboardHeight : 0),
+                           PanelView::kCanvasWidth / PanelView::kCanvasHeight, 700, 2400);
+}
+
+void HydraEditor::showKeyboard(bool visible, bool resizeWindow) {
+    toggleKeyboard_.setToggleState(visible, juce::dontSendNotification);
+    if (keyboard_.isVisible() == visible && resizeWindow)
+        return;
+    const int browserWidth = browser_.isVisible() ? kBrowserWidth : 0;
+    if (visible)
+        keyboardRestorePanelWidth_ = getWidth() - browserWidth;
+    keyboard_.setVisible(visible);
+    updateResizeLimits();
+    if (resizeWindow) {
+        const int panelWidth = visible
+            ? std::max(700, keyboardRestorePanelWidth_ - static_cast<int>(std::lround(kKeyboardHeight * PanelView::kCanvasWidth / PanelView::kCanvasHeight)))
+            : (keyboardRestorePanelWidth_ > 0 ? keyboardRestorePanelWidth_ : getWidth() - browserWidth);
+        const auto size = constrainer_.sizeFor(panelWidth);
+        setSize(size.x, size.y);
+        if (visible)
+            keyboard_.grabKeyboardFocus();
+    } else {
+        resized();
+    }
 }
 
 void HydraEditor::showBrowser(bool visible, bool resizeWindow) {
@@ -103,6 +134,7 @@ void HydraEditor::resized() {
     auto bar = area.removeFromTop(kBarHeight).reduced(8, 4);
     title_.setBounds(bar.removeFromLeft(130));
     togglePatches_.setBounds(bar.removeFromLeft(80));
+    toggleKeyboard_.setBounds(bar.removeFromLeft(92));
     bar.removeFromLeft(12);
     chooseFirmware_.setBounds(bar.removeFromRight(100));
     bar.removeFromRight(8);
@@ -112,6 +144,8 @@ void HydraEditor::resized() {
     firmware_.setBounds(bar);
     if (browser_.isVisible())
         browser_.setBounds(area.removeFromLeft(kBrowserWidth));
+    if (keyboard_.isVisible())
+        keyboard_.setBounds(area.removeFromBottom(kKeyboardHeight).reduced(10, 6));
     panel_.setBounds(area);
 }
 

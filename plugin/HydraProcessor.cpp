@@ -170,6 +170,9 @@ void HydraProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBu
         return;
     hydra::Emulator& emulator = *emulator_;
 
+    // Merge notes played on the editor's virtual keyboard with host MIDI.
+    midiKeyboardState_.processNextMidiBuffer(midi, 0, buffer.getNumSamples(), true);
+
     for (const auto metadata : midi) {
         const juce::MidiMessage message = metadata.getMessage();
         emulator.sendMidi(message.getRawData(), static_cast<std::size_t>(message.getRawDataSize()));

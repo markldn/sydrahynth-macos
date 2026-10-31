@@ -69,6 +69,7 @@ public:
     // The emulated front panel (no-ops while no emulator runs).
     void panelInput(const hydra::Emulator::PanelInput& input);
     bool readPanel(hydra::FrontPanel::Lights& out, std::uint64_t& generation) const;
+    juce::MidiKeyboardState& midiKeyboardState() { return midiKeyboardState_; }
 
 private:
     void parameterValueChanged(int index, float newValue) override;
@@ -83,6 +84,7 @@ private:
     void applyLatency();
 
     juce::ApplicationProperties settings_;
+    juce::MidiKeyboardState midiKeyboardState_;
 
     std::array<juce::AudioParameterInt*, ccmap::kEntries.size()> ccParameters_{};
     std::array<std::atomic<bool>, ccmap::kEntries.size()> ccDirty_{};

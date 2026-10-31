@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 
 #include "PanelView.h"
 #include "PatchBrowser.h"
@@ -37,19 +38,23 @@ public:
 
 private:
     static constexpr int kBarHeight = 36, kBrowserWidth = 270;
+    static constexpr int kKeyboardHeight = 112;
 
     void timerCallback() override;
     void chooseFirmware();
     // Shows or hides the patch browser; the window grows or shrinks by its width.
     void showBrowser(bool visible, bool resizeWindow);
+    void showKeyboard(bool visible, bool resizeWindow);
     void updateResizeLimits();
 
     HydraProcessor& processor_;
     juce::Label title_, firmware_, status_;
-    juce::TextButton chooseFirmware_{"Firmware..."}, togglePatches_{"Patches"};
+    juce::TextButton chooseFirmware_{"Firmware..."}, togglePatches_{"Patches"}, toggleKeyboard_{"Keyboard"};
     juce::ComboBox latency_;
     std::unique_ptr<juce::FileChooser> chooser_;
     PatchBrowser browser_;
     PanelView panel_;
+    juce::MidiKeyboardComponent keyboard_;
     PanelConstrainer constrainer_;
+    int keyboardRestorePanelWidth_ = -1;
 };
