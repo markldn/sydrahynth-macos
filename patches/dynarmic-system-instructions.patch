@@ -57,5 +57,17 @@ index 360df06..9e8b3ce 100644
 +    /// past it; the callee must emulate it, including evaluating its condition code.
 +    SystemInstruction,
  };
- 
+
  /// These function pointers may be inserted into compiled code.
+
+diff --git a/src/dynarmic/backend/arm64/reg_alloc.cpp b/src/dynarmic/backend/arm64/reg_alloc.cpp
+index 90befad..fe865a7 100644
+--- a/src/dynarmic/backend/arm64/reg_alloc.cpp
++++ b/src/dynarmic/backend/arm64/reg_alloc.cpp
+@@ -172,5 +172,5 @@ void RegAlloc::PrepareForCall(std::optional<Argument::copyable_reference> arg0,
+     for (int i = 0; i < 4; i++) {
+-        if (args[i]) {
++        if (args[i] && args[i]->get().GetType() != IR::Type::Void) {
+             if (args[i]->get().GetType() == IR::Type::U128) {
+                 ASSERT(fprs[nsrn].IsCompletelyEmpty());
+                 LoadCopyInto(args[i]->get().value, oaknut::QReg{nsrn});
