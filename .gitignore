@@ -4,5 +4,6 @@ external/
 *.dat
 *.pdf
 *.hydra
+Hydrasynth_Desktop_Firmware_Pack_*.zip
 __pycache__/
 *.pyc
