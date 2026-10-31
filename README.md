@@ -23,6 +23,8 @@ interpreter; the x86-64 DSP JIT remains enabled on supported x86-64 hosts.
     cmake -S . -B build -G Ninja
     cmake --build build
 
+On macOS, run or restart the standalone with `./run.sh` after building.
+
 This builds the tools and, with JUCE fetched, the plugin as VST3, LV2 and a
 standalone app in `build/Sydrahynth_artefacts/<config>/`. Install by
 copying `VST3/Sydrahynth.vst3` to `~/.vst3/` and `LV2/Sydrahynth.lv2` to
